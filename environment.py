@@ -8,7 +8,7 @@ import random
 class SimpleEnv:
 
     def __init__(self, env_name):
-        self.env = gym.make(env_name)
+        self.env = gym.make(env_name, render_mode="human")
         if type(self.env.action_space) == Discrete:
             self.discrete = True
         else:
