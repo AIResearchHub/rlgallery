@@ -1,6 +1,7 @@
 
 
-from environment import SimpleEnv, AtariEnv
+from environment import Env, SimpleEnv, AtariEnv
+from models import FeedForward
 from agents import Random
 
 
@@ -20,17 +21,26 @@ def main(env_name="CartPole-v1",
          ):
 
     env = SimpleEnv(env_name)
-    agent = Random(num_action=env.action_size)
+
+    model = FeedForward(env.state_size, env.action_size, 64, 2)
+    agent = Random(model, env.action_size)
 
     for epoch in range(epochs):
-        obs = env.reset()
         done = False
+        obs = env.reset()
+        total_reward = 0.
+        total_loss = 0.
+
         while not done:
-            action = agent.get_action()
+            action = agent.get_action(obs)
             next_obs, reward, done, _, _ = env.step(action)
 
-            obs = next_obs
+            loss = agent.train()
 
+            total_reward += reward
+            total_loss += loss
+
+            obs = next_obs
             env.render()
 
 

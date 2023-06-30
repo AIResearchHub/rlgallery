@@ -2,7 +2,42 @@
 
 import gym
 from gym.spaces import Discrete
+
+import numpy as np
 import random
+
+
+def preprocess_frame(frame):
+    # to grayscale
+    frame = np.mean(frame, axis=2).astype(np.uint8)
+
+    # down sample
+    frame = frame[::2, ::2]
+
+    frame = frame.astype("float32")
+    frame /= 255.
+
+    return frame
+
+
+class Env:
+    simple = ["CartPole-v1", "Pendulum-v1"]
+    atari = ["BreakoutDeterministic-v4"]
+
+    def __init__(self, name):
+        self.env = gym.make(name, render_mode="human")
+
+        self.state_size = self.env.observation_space.shape
+        self.action_size = self.env.action_space.n
+
+    def reset(self):
+        return self.env.reset()
+
+    def step(self, action):
+        return self.env.step(action)
+
+    def render(self):
+        self.env.render()
 
 
 class SimpleEnv:
