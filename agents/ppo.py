@@ -17,7 +17,6 @@ class PPO(Agent):
     lr = 0.001
     gamma = 0.95
     clip = 0.2
-    log_every = 100
 
     def __init__(self, actor, critic):
         self.frames = 0

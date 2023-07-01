@@ -11,10 +11,10 @@ class Actor(nn.Module):
         cls (nn.Module): what model to use (e.g. feed forward, cnn etc...)
     """
 
-    def __init__(self, cls, state_size, action_size, dim, n_layers):
+    def __init__(self, cls, state_size, action_size, dim):
         super(Actor, self).__init__()
 
-        self.actor = cls(state_size, dim, n_layers)
+        self.actor = cls(state_size, dim)
         self.out = nn.Linear(dim, action_size)
 
     def forward(self, x):

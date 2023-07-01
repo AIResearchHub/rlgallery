@@ -10,18 +10,18 @@ def plot():
 
     data = pd.read_csv(latestfile,
                        names=["Time",
-                              "Reward",
-                              "Loss"]
+                              "Epoch",
+                              "Reward"]
                        )
 
     plt.subplot(3, 1, 1)
     plt.plot(data["Time"])
 
     plt.subplot(3, 1, 2)
-    plt.plot(data["Reward"])
+    plt.plot(data["Epoch"])
 
     plt.subplot(3, 1, 3)
-    plt.plot(data["Loss"])
+    plt.plot(data["Reward"])
 
     plt.show()
 

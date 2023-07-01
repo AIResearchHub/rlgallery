@@ -5,10 +5,10 @@ import torch.nn as nn
 
 class Critic(nn.Module):
 
-    def __init__(self, cls, state_size, dim, n_layers):
+    def __init__(self, cls, state_size, dim):
         super(Critic, self).__init__()
 
-        self.critic = cls(state_size, dim, n_layers)
+        self.critic = cls(state_size, dim)
         self.out = nn.Linear(dim, 1)
 
     def forward(self, x):

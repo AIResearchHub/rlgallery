@@ -20,7 +20,7 @@ class FeedForward(nn.Module):
         inner_dim (int): The dimension of the hidden layer
     """
 
-    def __init__(self, in_dim, inner_dim, n_layers):
+    def __init__(self, in_dim, inner_dim, n_layers=2):
         super(FeedForward, self).__init__()
 
         self.in_layer = nn.Linear(in_dim, inner_dim)

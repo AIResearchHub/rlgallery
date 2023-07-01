@@ -3,6 +3,7 @@
 import gym
 from gym.spaces import Discrete
 
+from collections import deque
 import numpy as np
 import random
 
@@ -20,34 +21,12 @@ def preprocess_frame(frame):
     return frame
 
 
-class Env:
-    simple = ["CartPole-v1", "Pendulum-v1"]
-    atari = ["BreakoutDeterministic-v4"]
-
-    def __init__(self, name):
-        self.env = gym.make(name, render_mode="human")
-
-        self.state_size = self.env.observation_space.shape
-        self.action_size = self.env.action_space.n
-
-    def reset(self):
-        return self.env.reset()
-
-    def step(self, action):
-        return self.env.step(action)
-
-    def render(self):
-        self.env.render()
-
-
 class SimpleEnv:
 
     def __init__(self, env_name):
         self.env = gym.make(env_name, render_mode="human")
         if type(self.env.action_space) == Discrete:
             self.discrete = True
-        else:
-            self.discrete = False
 
     @property
     def state_size(self):
@@ -61,13 +40,15 @@ class SimpleEnv:
             return self.env.action_space.shape[0]
 
     def reset(self):
-        return self.env.reset()
+        obs, _ = self.env.reset()
+        return obs
 
     def step(self, action, bound=2):
         if not self.discrete:
             action *= bound
 
-        return self.env.step(action)
+        obs, reward, done, _, _ = self.env.step(action)
+        return obs, reward, done
 
     def render(self):
         self.env.render()
@@ -75,7 +56,7 @@ class SimpleEnv:
 
 class AtariEnv:
 
-    def __init__(self, env_name, auto_start=True, training=True, no_op_max=50):
+    def __init__(self, env_name, auto_start=True, training=True, no_op_max=20):
         self.env = gym.make(env_name, render_mode="human")
         self.discrete = True
         self.last_lives = 0
@@ -86,6 +67,8 @@ class AtariEnv:
         self.training = training
         self.no_op_max = no_op_max
 
+        self.stack = deque(maxlen=4)
+
     @property
     def state_size(self):
         return self.env.observation_space.shape
@@ -95,6 +78,9 @@ class AtariEnv:
         return self.env.action_space.n
 
     def reset(self):
+        for i in range(4):
+            self.stack.append(np.zeros((105, 80)))
+
         if self.auto_start:
             self.fire = True
 
@@ -104,8 +90,8 @@ class AtariEnv:
             for i in range(random.randint(1, self.no_op_max)):
                 frame, _, _, _ = self.env.step(1)
 
-        frame = frame[::2, ::2, :]
-        return frame
+        self.stack.append(preprocess_frame(frame))
+        return np.array(self.stack, dtype=np.float32)
 
     def step(self, action):
         if self.fire:
@@ -123,8 +109,9 @@ class AtariEnv:
 
         self.last_lives = info["lives"]
 
-        frame = frame[::2, ::2, :]
-        return frame, reward, terminal, life_lost
+        self.stack.append(preprocess_frame(frame))
+        frame = np.array(self.stack, dtype=np.float32)
+        return frame, reward, life_lost
 
     def render(self):
         """Called at each timestep to render"""
