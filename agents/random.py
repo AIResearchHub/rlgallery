@@ -7,11 +7,11 @@ from .agent import Agent
 
 class Random(Agent):
 
-    def __init__(self, **kwargs):
-        self.num_action = kwargs.num_action
+    def __init__(self, model, action_size):
+        self.action_size = action_size
 
     def get_action(self, obs):
-        return random.randrange(0, self.num_action)
+        return random.randrange(0, self.action_size)
 
     def remember(self):
         pass

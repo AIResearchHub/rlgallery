@@ -2,14 +2,18 @@
 
 import torch.nn as nn
 
-from feedforward import FeedForward
-
 
 class Critic(nn.Module):
 
-    def __init__(self, cls):
-        self.critic = cls()
+    def __init__(self, cls, state_size, dim, n_layers):
+        super(Critic, self).__init__()
+
+        self.critic = cls(state_size, dim, n_layers)
+        self.out = nn.Linear(dim, 1)
 
     def forward(self, x):
-        return self.ff(x)
+        x = self.critic(x)
+        x = self.out(x)
+
+        return x
 
