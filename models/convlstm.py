@@ -5,24 +5,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class ConvNet(nn.Module):
+class ConvLSTM(nn.Module):
 
     def __init__(self, state_size, dim):
-        super(ConvNet, self).__init__()
+        super(ConvLSTM, self).__init__()
         self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.fc = nn.Linear(3456, 512)
+
+        self.lstm = nn.LSTM(512)
         self.out = nn.Linear(512, dim)
 
-    def forward(self, x):
+    def forward(self, x, state):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = torch.flatten(x, 1)
 
         x = F.relu(self.fc(x))
+
+        x, state = self.lstm(x, state)
         x = self.out(x)
 
-        return x
+        return x, state
 

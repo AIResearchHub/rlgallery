@@ -8,15 +8,13 @@ import random
 from copy import deepcopy
 
 from .agent import Agent
-from .replaybuffer import ReplayBuffer
+from .replaybuffer import RecurrentBuffer
 
 
-class Rainbow(Agent):
+class R2D2(Agent):
     """
-    Upgrades to DQN:
-        Dueling Model Architecture
-        Prioritized Experience Replay
-        Implicit Quantile Network
+    Upgrades to Rainbow DQN:
+        LSTM memory using burn-in and rollout
     """
 
     epsilon = 1.0
@@ -38,7 +36,7 @@ class Rainbow(Agent):
 
         self.opt = Adam(self.model.parameters(), lr=self.lr)
 
-        self.memory = ReplayBuffer()
+        self.memory = RecurrentBuffer()
         self.frames = 0
 
     def get_action(self, obs):
