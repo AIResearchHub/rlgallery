@@ -11,7 +11,14 @@ from .agent import Agent
 from .replaybuffer import ReplayBuffer
 
 
-class DQN(Agent):
+class Rainbow(Agent):
+    """
+    Upgrades to DQN:
+        Dueling Model Architecture
+        Prioritized Experience Replay
+        Implicit Quantile Network
+    """
+
     epsilon = 1.0
     epsilon_min = 0.1
     epsilon_decay = 0.99
@@ -20,6 +27,8 @@ class DQN(Agent):
     bsz = 32
     lr = 1e-4
     gamma = 0.99
+
+    n_step = 4
 
     def __init__(self, action_size, model):
         self.action_size = action_size

@@ -6,7 +6,11 @@ from abc import abstractmethod
 class Agent:
 
     @abstractmethod
-    def get_action(self):
+    def get_action(self, obs):
+        pass
+
+    @abstractmethod
+    def remember(self, obs, action, reward, next_obs, done):
         pass
 
     @abstractmethod

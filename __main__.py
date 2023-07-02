@@ -42,10 +42,13 @@ def main(env_name="BreakoutDeterministic-v4",
 
     critic = Critic(ConvNet,
                     dim=64,
-                    state_size=env.state_size)
+                    state_size=env.state_size,
+                    num_value=1)#=env.action_size)
 
     agent = PPO(actor=actor,
                 critic=critic)
+    # agent = DQN(action_size=env.action_size,
+    #             model=critic)
     # agent = Random(env.action_size)
 
     dt = f"{datetime.now().strftime('%Y_%m_%d_%H_%M')}.txt"

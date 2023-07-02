@@ -12,9 +12,9 @@ from .agent import Agent
 
 
 class PPO(Agent):
-    timesteps_per_batch = 1000
+    timesteps_per_batch = 4000
     n_updates = 5
-    lr = 0.001
+    lr = 1e-4
     gamma = 0.95
     clip = 0.2
 
@@ -35,7 +35,6 @@ class PPO(Agent):
         self.actions = []
         self.logits = []
         self.rewards = []
-        self.next_obs = []
         self.ep_rews = []
 
     @torch.no_grad()
@@ -51,12 +50,10 @@ class PPO(Agent):
 
         return action.detach().item()
 
-    def remember(self, ob, action, reward, next_ob, done):
-        self.obs.append(ob)
+    def remember(self, obs, action, reward, next_obs, done):
+        self.obs.append(obs)
         self.actions.append(action)
         self.logits.append(self.logit)
-        self.next_obs.append(next_ob)
-
         self.ep_rews.append(reward)
 
         self.ready = False
@@ -72,15 +69,13 @@ class PPO(Agent):
         actions = torch.tensor(self.actions)
         logits = torch.tensor(self.logits)
         rewards = deepcopy(self.rewards)
-        next_obs = torch.tensor(np.array(self.next_obs))
 
         self.obs.clear()
         self.actions.clear()
         self.logits.clear()
         self.rewards.clear()
-        self.next_obs.clear()
 
-        return obs, actions, logits, rewards, next_obs
+        return obs, actions, logits, rewards
 
     def evaluate(self, obs, actions):
         """
@@ -114,7 +109,7 @@ class PPO(Agent):
         rtgs = torch.tensor(rtgs, dtype=torch.float32)
         return rtgs
 
-    def update(self, obs, actions, logits, rewards, next_obs):
+    def update(self, obs, actions, logits, rewards):
         total_actor_loss = 0.
         total_critic_loss = 0.
 

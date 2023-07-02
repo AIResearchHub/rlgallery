@@ -1,8 +1,15 @@
 
 
+import torch
 import numpy as np
 import random
 import os
+
+
+"""
+Code for prioritized experience replay mostly taken from:
+https://medium.com/analytics-vidhya/building-a-powerful-dqn-in-tensorflow-2-0-explanation-tutorial-d48ea8f3177a
+"""
 
 
 class ReplayBuffer:
@@ -18,11 +25,11 @@ class ReplayBuffer:
         self.actions = np.empty(self.size, dtype=np.int32)
         self.rewards = np.empty(self.size, dtype=np.float32)
         self.frames = np.empty((self.size, self.input_shape[0], self.input_shape[1]), dtype=np.uint8)
-        self.terminal = np.empty(self.size, dtype=np.bool)
+        self.terminal = np.empty(self.size, dtype=bool)
         if self.use_per:
             self.priorities = np.empty(self.size, dtype=np.float32)
 
-    def add_experience(self, next_frame, action, reward, terminal):
+    def add(self, next_frame, action, reward, terminal):
         self.actions[self.current] = action
         self.frames[self.current, ...] = next_frame
         self.rewards[self.current] = reward
@@ -33,7 +40,7 @@ class ReplayBuffer:
         self.count = max(self.count, self.current+1)
         self.current = (self.current + 1) % self.size
 
-    def get_minibatch(self, batch_size, priority_scale=0.7):
+    def sample(self, batch_size, priority_scale=0.7):
         if self.count < self.history_length:
             raise ValueError('Not enough memories to get a minibatch')
 
@@ -64,20 +71,26 @@ class ReplayBuffer:
             states.append(self.frames[idx-self.history_length:idx, ...])
             new_states.append(self.frames[idx-self.history_length+1:idx+1, ...])
 
-        states = np.transpose(np.asarray(states), axes=(0, 2, 3, 1)).astype("float32") / 255.
-        new_states = np.transpose(np.asarray(new_states), axes=(0, 2, 3, 1)).astype("float32") / 255.
+        states = np.asarray(states).astype("float32") / 255.
+        new_states = np.asarray(new_states).astype("float32") / 255.
+
+        states = torch.tensor(states, dtype=torch.float32)
+        rewards = torch.tensor(self.rewards[indices], dtype=torch.float32)
+        actions = torch.tensor(self.actions[indices], dtype=torch.int32)
+        new_states = torch.tensor(new_states, dtype=torch.float32)
+        terminal = torch.tensor(self.terminal[indices], dtype=torch.bool)
 
         if self.use_per:
             # Get importance weights from probabilities calculated earlier
             importance = 1/self.count * 1/sample_probabilities[[index - self.history_length for index in indices]]
             importance = importance / importance.max()
 
-            return (states, self.rewards[indices], self.actions[indices], new_states, self.terminal[indices]),\
+            return (states, actions, rewards, new_states, terminal),\
                     importance,\
                     indices
 
         else:
-            return states, self.rewards[indices], self.actions[indices], new_states, self.terminal[indices]
+            return states, actions, rewards, new_states, terminal
 
     def set_priorities(self, indices, errors, offset=0.1):
         for i, e in zip(indices, errors):
