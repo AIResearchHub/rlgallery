@@ -12,7 +12,7 @@ from .agent import Agent
 
 
 class PPO(Agent):
-    timesteps_per_batch = 4000
+    timesteps_per_batch = 1000
     n_updates = 5
     lr = 1e-4
     gamma = 0.95

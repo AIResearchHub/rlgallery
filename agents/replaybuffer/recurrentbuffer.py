@@ -37,13 +37,13 @@ class RecurrentBuffer:
         self.tactions.clear()
         self.trewards.clear()
 
+        self.size += 1
+        self.size = min(self.size, self.buffer_size)
+
     def add(self, state, action, reward):
         self.tobs.append(state)
         self.tactions.append(action)
         self.trewards.append(reward)
-
-        self.size += 1
-        self.size = min(self.size, self.buffer_size)
 
     def sample(self):
 
@@ -53,15 +53,22 @@ class RecurrentBuffer:
 
         for i in range(self.bsz):
             bidx = random.randrange(0, self.size)
-            tidx = random.randrange(0, self.lengths[bidx]-self.n_step-self.block_len+1)
+            tidx = random.randrange(0, len(self.obs[bidx])-self.n_step-self.block_len+1)
 
-            obs.append([self.obs[tidx+t] for t in range(self.block_len + self.n_step)])
-            actions.append([self.actions[tidx+t] for t in range(self.block_len)])
-            rewards.append([self.rewards[tidx+t:tidx+t+self.n_step] for t in range(self.block_len)])
+            obs.append([self.obs[bidx][tidx+t] for t in range(self.block_len+self.n_step)])
+            actions.append([self.actions[bidx][tidx+t] for t in range(self.block_len+self.n_step)])
+            rewards.append([self.rewards[bidx][tidx+t:tidx+t+self.n_step] for t in range(self.block_len)])
 
-        obs = torch.tensor(obs)
-        actions = torch.tensor(actions).view(self.bsz, self.block_len+self.n_step, 1)
-        rewards = torch.tensor(np.sum(np.array(rewards) * self.gamma, axis=2)).view(self.bsz, self.block_len, 1)
+        obs = torch.tensor(np.array(obs), dtype=torch.float32)
+        actions = torch.tensor(actions, dtype=torch.int32
+                               ).view(self.bsz, self.block_len+self.n_step, 1)
+        rewards = torch.tensor(np.sum(np.array(rewards) * self.gamma, axis=2), dtype=torch.float32
+                               ).view(self.bsz, self.block_len, 1)
+
+        # (block+n_step, bsz, ...)
+        obs = obs.transpose(0, 1)
+        actions = actions.transpose(0, 1)
+        rewards = rewards.transpose(0, 1)
 
         return obs, actions, rewards
 

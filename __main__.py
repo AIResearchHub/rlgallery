@@ -4,8 +4,8 @@ import time
 from datetime import datetime
 
 from environment import SimpleEnv, AtariEnv
-from models import FeedForward, ConvNet, Actor, Critic
-from agents import Random, PPO, DQN
+from models import Actor, Critic, FeedForward, ConvNet, ConvLSTM
+from agents import Random, PPO, DQN, R2D2
 
 
 """
@@ -20,36 +20,42 @@ BreakoutDeterministic-v4 (Discrete)
 
 
 def main(env_name="BreakoutDeterministic-v4",
+         agent="r2d2",
          epochs=100_000_000
          ):
 
     # env = SimpleEnv(env_name)
     env = AtariEnv(env_name)
 
-    # actor = Actor(FeedForward,
-    #               dim=64,
-    #               state_size=env.state_size,
-    #               action_size=env.action_size)
-    #
-    # critic = Critic(FeedForward,
-    #                 dim=64,
-    #                 state_size=env.state_size)
+    if agent == "random":
+        agent = Random(env.action_size)
 
-    actor = Actor(ConvNet,
-                  dim=64,
-                  state_size=env.state_size,
-                  action_size=env.action_size)
+    elif agent == "ppo":
+        actor = Actor(ConvNet,
+                      dim=64,
+                      state_size=env.state_size,
+                      action_size=env.action_size)
+        critic = Critic(ConvNet,
+                        dim=64,
+                        state_size=env.state_size,
+                        num_value=1)
+        agent = PPO(actor=actor,
+                    critic=critic)
 
-    critic = Critic(ConvNet,
-                    dim=64,
-                    state_size=env.state_size,
-                    num_value=1)#=env.action_size)
+    elif agent == "dqn":
+        critic = Critic(ConvNet,
+                        dim=64,
+                        state_size=env.state_size)
+        agent = DQN(action_size=env.action_size,
+                    model=critic)
 
-    agent = PPO(actor=actor,
-                critic=critic)
-    # agent = DQN(action_size=env.action_size,
-    #             model=critic)
-    # agent = Random(env.action_size)
+    elif agent == "r2d2":
+        critic = Critic(ConvLSTM,
+                        dim=64,
+                        state_size=env.state_size,
+                        num_value=env.action_size)
+        agent = R2D2(action_size=env.action_size,
+                     model=critic)
 
     dt = f"{datetime.now().strftime('%Y_%m_%d_%H_%M')}.txt"
     file = open(f"logs/{dt}", "w")

@@ -14,7 +14,7 @@ class ConvLSTM(nn.Module):
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.fc = nn.Linear(3456, 512)
 
-        self.lstm = nn.LSTM(512)
+        self.lstm = nn.LSTMCell(512, 512)
         self.out = nn.Linear(512, dim)
 
     def forward(self, x, state):
@@ -24,8 +24,8 @@ class ConvLSTM(nn.Module):
         x = torch.flatten(x, 1)
 
         x = F.relu(self.fc(x))
-
         x, state = self.lstm(x, state)
+        state = (x, state)
         x = self.out(x)
 
         return x, state
