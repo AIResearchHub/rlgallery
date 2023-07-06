@@ -32,11 +32,9 @@ def main(env_name="BreakoutDeterministic-v4",
 
     elif agent == "ppo":
         actor = Actor(ConvNet,
-                      dim=64,
                       state_size=env.state_size,
                       action_size=env.action_size)
         critic = Critic(ConvNet,
-                        dim=64,
                         state_size=env.state_size,
                         num_value=1)
         agent = PPO(actor=actor,
@@ -44,14 +42,12 @@ def main(env_name="BreakoutDeterministic-v4",
 
     elif agent == "dqn":
         critic = Critic(ConvNet,
-                        dim=64,
                         state_size=env.state_size)
         agent = DQN(action_size=env.action_size,
                     model=critic)
 
     elif agent == "r2d2":
         critic = Critic(ConvLSTM,
-                        dim=64,
                         state_size=env.state_size,
                         num_value=env.action_size)
         agent = R2D2(action_size=env.action_size,
